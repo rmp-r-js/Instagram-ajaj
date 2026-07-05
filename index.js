@@ -6,8 +6,8 @@ const port = process.env.PORT || 3000;
 
 app.get('/', async (req, res) => {
   // Render pe test karne ke liye hardcoded credentials
-  const username = 'YOUR_IG_USERNAME';
-  const password = 'YOUR_IG_PASSWORD';
+  const username = 'the.mindzenic';
+  const password = 'jitubhai77';
 
   const ig = new IgApiClient();
 
