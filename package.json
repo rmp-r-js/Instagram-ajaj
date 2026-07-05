@@ -1,12 +1,13 @@
 {
-  "name": "ig-test-build",
+  "name": "ig-render-test",
   "version": "1.0.0",
-  "description": "Quick IG API testing",
+  "description": "Render IG API testing",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
+    "express": "^4.19.2",
     "instagram-private-api": "^1.45.3"
   }
 }

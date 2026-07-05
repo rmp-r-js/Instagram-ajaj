@@ -1,33 +1,49 @@
+const express = require('express');
 const { IgApiClient } = require('instagram-private-api');
 
-// Initialize client
-const ig = new IgApiClient();
+const app = express();
+const port = process.env.PORT || 3000;
 
-async function start() {
+app.get('/', async (req, res) => {
+  // Render pe test karne ke liye hardcoded credentials
   const username = 'YOUR_IG_USERNAME';
   const password = 'YOUR_IG_PASSWORD';
 
+  const ig = new IgApiClient();
+
   try {
-    // 1. Apne account ke liye ek unique device fingerprint generate karo (Bans avoid karne ke liye bohot zaroori hai)
+    console.log(`[LOG] API Hit hui. Device generate kar raha hu for: ${username}`);
     ig.state.generateDevice(username);
-
-    console.log('Logging in...');
-    // 2. Perform the login
+    
+    console.log('[LOG] Logging in...');
     const loggedInUser = await ig.account.login(username, password);
-    console.log(`✅ Login successful! Welcome @${loggedInUser.username}`);
+    console.log(`[LOG] ✅ Login Done! User ID: ${loggedInUser.pk}`);
 
-    // 3. Apni profile ka additional data fetch karte hain
+    console.log('[LOG] Fetching profile info...');
     const userInfo = await ig.account.userInfo(loggedInUser.pk);
     
-    console.log('--- Account Stats ---');
-    console.log(`Followers: ${userInfo.follower_count}`);
-    console.log(`Following: ${userInfo.following_count}`);
+    console.log(`[LOG] Data aagaya! Followers: ${userInfo.follower_count}`);
 
-    // Yahan se aage tum DMs bhejne, feeds read karne, ya posts upload karne ka logic add kar sakte ho.
+    // Browser par JSON response bhej do
+    res.json({
+      status: 'success',
+      data: {
+        username: loggedInUser.username,
+        fullName: userInfo.full_name,
+        followers: userInfo.follower_count,
+        following: userInfo.following_count
+      }
+    });
 
   } catch (error) {
-    console.error('❌ Error occurred:', error.message);
+    console.error('[ERROR] ❌ Phat gaya:', error.message);
+    res.status(500).json({ 
+      status: 'failed', 
+      error: error.message 
+    });
   }
-}
+});
 
-start();
+app.listen(port, () => {
+  console.log(`🚀 Server Render (ya local) ke port ${port} par start ho gaya hai`);
+});
