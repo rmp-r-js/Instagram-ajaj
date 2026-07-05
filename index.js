@@ -5,8 +5,8 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.get('/', async (req, res) => {
-  const username = 'YOUR_IG_USERNAME';
-  const password = 'YOUR_IG_PASSWORD';
+  const username = 'the.mindzenic';
+  const password = 'jitubhai77';
 
   const ig = new IgApiClient();
 
