@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Export Public Repo Names</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#111;
+    color:#fff;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    flex-direction:column;
+}
+button{
+    padding:14px 28px;
+    font-size:18px;
+    cursor:pointer;
+}
+pre{
+    margin-top:20px;
+    width:90%;
+    max-width:700px;
+    height:250px;
+    overflow:auto;
+    background:#222;
+    padding:15px;
+}
+</style>
+</head>
+
+<body>
+
+<button onclick="exportRepos()">
+Download Public Repo Names
+</button>
+
+<pre id="output"></pre>
+
+<script>
+
+async function exportRepos(){
+
+    const username = prompt("GitHub Username");
+
+    if(!username) return;
+
+    let page = 1;
+    let repos = [];
+
+    while(true){
+
+        const res = await fetch(
+            `https://api.github.com/users/${username}/repos?per_page=100&page=${page}&sort=full_name`
+        );
+
+        if(!res.ok){
+            alert("User not found");
+            return;
+        }
+
+        const data = await res.json();
+
+        if(data.length===0) break;
+
+        repos.push(...data);
+
+        page++;
+    }
+
+    const names = repos
+        .filter(repo=>!repo.private)
+        .map(repo=>repo.name);
+
+    document.getElementById("output").textContent =
+        names.join("\n");
+
+    const blob = new Blob(
+        [names.join("\n")],
+        {type:"text/plain"}
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = "public-repositories.txt";
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+}
+
+</script>
+
+</body>
+</html>
