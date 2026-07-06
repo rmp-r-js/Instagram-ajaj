@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GitHub Follow & Star</title>
+<style>
+body{
+    font-family: Arial, sans-serif;
+    max-width:500px;
+    margin:40px auto;
+}
+input{
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+}
+button{
+    padding:10px 20px;
+    margin:5px;
+    cursor:pointer;
+}
+#result{
+    margin-top:20px;
+    white-space:pre-wrap;
+}
+</style>
+</head>
+<body>
+
+<h2>GitHub Follow & Star</h2>
+
+<input type="password" id="pat" placeholder="GitHub Classic PAT">
+
+<input type="text" id="username" placeholder="Username to Follow">
+
+<button onclick="followUser()">Follow User</button>
+
+<hr>
+
+<input type="text" id="repo" placeholder="Repository Name">
+
+<button onclick="starRepo()">Star Repository</button>
+
+<div id="result"></div>
+
+<script>
+function log(msg){
+    document.getElementById("result").textContent = msg;
+}
+
+async function followUser(){
+
+    const pat = document.getElementById("pat").value.trim();
+    const username = document.getElementById("username").value.trim();
+
+    if(!pat || !username){
+        return log("PAT aur Username required.");
+    }
+
+    const res = await fetch(`https://api.github.com/user/following/${username}`,{
+        method:"PUT",
+        headers:{
+            "Authorization":"Bearer " + pat,
+            "Accept":"application/vnd.github+json"
+        }
+    });
+
+    if(res.status===204){
+        log("✅ Followed successfully.");
+    }else{
+        log("❌ Error: "+res.status+"\n"+await res.text());
+    }
+}
+
+async function starRepo(){
+
+    const pat = document.getElementById("pat").value.trim();
+    const username = document.getElementById("username").value.trim();
+    const repo = document.getElementById("repo").value.trim();
+
+    if(!pat || !username || !repo){
+        return log("PAT, Username aur Repo required.");
+    }
+
+    const res = await fetch(`https://api.github.com/user/starred/${username}/${repo}`,{
+        method:"PUT",
+        headers:{
+            "Authorization":"Bearer " + pat,
+            "Accept":"application/vnd.github+json"
+        }
+    });
+
+    if(res.status===204){
+        log("⭐ Repo Starred Successfully.");
+    }else{
+        log("❌ Error: "+res.status+"\n"+await res.text());
+    }
+}
+</script>
+
+</body>
+</html>
