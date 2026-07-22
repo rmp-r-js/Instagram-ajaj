@@ -5,14 +5,14 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // ============================================================
-// 🔐 TERI REAL COOKIES (JSON se hardcoded)
+// 🔐 TERI REAL COOKIES (Hardcoded)
 // ============================================================
 const USERNAME = 'the.mindzenic';
 
-// 🌍 User-Agent (Chrome 120 – jo tune cookies li thi usi ka)
+// 🌍 User-Agent (Chrome 120)
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-// 🍪 Sab cookies – as per teri list
+// 🍪 Saari cookies – teri JSON se
 const COOKIES = {
   sessionid: '27668585804%3AdS58wogpeC57vV%3A13%3AAYixIs7tGB_wD_tf_XiDlBuF-8a2ftstFpG3e5P9EQ',
   ds_user_id: '27668585804',
@@ -40,7 +40,7 @@ app.get('/', async (req, res) => {
     // 2️⃣ Exact User-Agent set
     ig.state.userAgent = USER_AGENT;
 
-    // 3️⃣ Saari cookies inject karo (domain .instagram.com, path /)
+    // 3️⃣ Saari cookies inject
     const domain = '.instagram.com';
     const url = 'https://www.instagram.com';
 
@@ -89,9 +89,9 @@ app.get('/', async (req, res) => {
       url
     );
 
-    console.log('[LOG] ✅ Saari cookies inject ho gayin! Ab user info le raha hu...');
+    console.log('[LOG] ✅ Saari cookies inject ho gayin!');
 
-    // 4️⃣ User ID se info fetch (login call nahi)
+    // 4️⃣ User info fetch
     const userId = parseInt(COOKIES.ds_user_id, 10);
     const userInfo = await ig.account.userInfo(userId);
 
@@ -113,7 +113,7 @@ app.get('/', async (req, res) => {
     if (error.message && (error.message.includes('checkpoint') || error.message.includes('challenge'))) {
       return res.status(401).json({
         status: 'checkpoint_required',
-        message: 'Render ka IP mismatch – proxy laga, ya pehle phone se login kar ke IP allow kar.'
+        message: 'IP mismatch – proxy laga, ya phone se login kar ke IP allow kar.'
       });
     }
 
@@ -129,5 +129,5 @@ app.get('/', async (req, res) => {
 // ============================================================
 app.listen(port, () => {
   console.log(`🚀 Server port ${port} par start ho gaya hai`);
-  console.log('🔥 Saari cookies hardcoded hain – ab chalega!');
+  console.log('🔥 Hardcoded cookies – chal raha hai!');
 });
