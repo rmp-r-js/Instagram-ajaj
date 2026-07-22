@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "express": "^4.19.2",
-    "instagram-private-api": "^1.45.3"
+    "axios": "^1.6.0"
   }
 }
