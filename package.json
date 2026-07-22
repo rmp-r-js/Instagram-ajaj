@@ -1,13 +1,13 @@
 {
   "name": "ig-render-test",
   "version": "1.0.0",
-  "description": "Render IG API testing",
+  "description": "Instagram session based API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "axios": "^1.6.0"
+    "insta-chat-api": "^1.0.0"
   }
 }
