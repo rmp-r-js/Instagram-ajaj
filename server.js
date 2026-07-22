@@ -35,7 +35,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', browser: browser ? 'active' : 'inactive' });
 });
 
-// ========== 📸 Screenshot endpoint (as before) ==========
+// ========== Screenshot ==========
 app.post('/screenshot', async (req, res) => {
   const { sessionid, targetUrl = 'https://www.instagram.com/' } = req.body;
   if (!sessionid) return res.status(400).json({ success: false, error: '"sessionid" required' });
@@ -69,7 +69,7 @@ app.post('/screenshot', async (req, res) => {
   }
 });
 
-// ========== 📊 Profile Data endpoint (NEW) ==========
+// ========== Profile Data ==========
 app.post('/profile', async (req, res) => {
   const { sessionid, targetUrl = 'https://www.instagram.com/' } = req.body;
   if (!sessionid) return res.status(400).json({ success: false, error: '"sessionid" required' });
@@ -88,14 +88,11 @@ app.post('/profile', async (req, res) => {
       sameSite: 'Lax'
     });
 
-    console.log(`📍 Navigating to ${targetUrl} for profile data...`);
     await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 60000 });
     await page.evaluate(() => new Promise(r => setTimeout(r, 3000)));
 
-    // 🧠 Extract data from page's JavaScript context
     const profileData = await page.evaluate(() => {
       try {
-        // Method 1: Try to get from window._sharedData (old method)
         let data = window._sharedData?.entry_data?.ProfilePage?.[0]?.graphql?.user;
         if (data) {
           return {
@@ -110,8 +107,7 @@ app.post('/profile', async (req, res) => {
             isVerified: data.is_verified || false
           };
         }
-
-        // Method 2: Fallback – scrape from DOM (if _sharedData not available)
+        // DOM fallback
         const username = document.querySelector('h2._ap3a')?.innerText || 
                          document.querySelector('header h2')?.innerText || '';
         const fullName = document.querySelector('h1._ap3a')?.innerText || username;
@@ -120,8 +116,6 @@ app.post('/profile', async (req, res) => {
                              document.querySelector('._ac2a span')?.innerText;
         const followingElem = document.querySelector('a[href$="/following/"] span') ||
                               document.querySelectorAll('._ac2a span')?.[1]?.innerText;
-
-        // Extract numbers from strings like "1.2M"
         const parseCount = (str) => {
           if (!str) return 0;
           str = str.replace(/,/g, '');
@@ -129,13 +123,12 @@ app.post('/profile', async (req, res) => {
           if (str.includes('K')) return parseFloat(str) * 1e3;
           return parseInt(str, 10) || 0;
         };
-
         return {
           username: username.trim(),
           fullName: fullName.trim(),
           followers: parseCount(followerElem),
           following: parseCount(followingElem),
-          posts: 0, // hard to get from DOM without extra parsing
+          posts: 0,
           bio: bio.trim(),
           profilePic: document.querySelector('img[alt*="profile picture"]')?.src || '',
           isPrivate: false,
@@ -146,14 +139,10 @@ app.post('/profile', async (req, res) => {
       }
     });
 
-    if (profileData.error) {
-      throw new Error(`Scrape failed: ${profileData.error}`);
-    }
+    if (profileData.error) throw new Error(`Scrape failed: ${profileData.error}`);
 
     await page.close();
-    console.log(`✅ Profile data fetched for ${profileData.username}`);
     res.json({ success: true, data: profileData });
-
   } catch (error) {
     if (page) await page.close().catch(() => {});
     console.error('Profile error:', error.message);
@@ -161,7 +150,6 @@ app.post('/profile', async (req, res) => {
   }
 });
 
-// Graceful shutdown
 process.on('SIGTERM', async () => { if (browser) await browser.close(); process.exit(0); });
 process.on('SIGINT', async () => { if (browser) await browser.close(); process.exit(0); });
 

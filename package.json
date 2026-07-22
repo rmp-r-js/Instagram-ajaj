@@ -1,13 +1,14 @@
 {
-  "name": "ig-render-test",
+  "name": "instagram-tool",
   "version": "1.0.0",
-  "description": "Render IG API testing",
-  "main": "index.js",
+  "description": "Instagram screenshot & profile scraper using Puppeteer + sessionid",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "instagram-private-api": "^1.45.3"
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "puppeteer": "^22.15.0"
   }
 }
