@@ -5,13 +5,11 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // ============================================================
-// 🔐 TERI REAL COOKIES (Hardcoded)
+// 🔐 COOKIES (Teri hi hain)
 // ============================================================
 const USERNAME = 'the.mindzenic';
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-// 🍪 Saari cookies ko ek string mein jod (key=value; ...)
-const COOKIE_STRING = 
+const COOKIE_STRING =
   `sessionid=27668585804%3AdS58wogpeC57vV%3A13%3AAYixIs7tGB_wD_tf_XiDlBuF-8a2ftstFpG3e5P9EQ; ` +
   `ds_user_id=27668585804; ` +
   `csrftoken=HSJPTuejTST-ZIgFa6eDHx; ` +
@@ -22,57 +20,72 @@ const COOKIE_STRING =
   `ps_n=1; ps_l=1; wd=360x668; dpr=2`;
 
 // ============================================================
-// 🚀 EXPRESS ROUTE
+// 🧠 HEADERS (Mobile + Desktop mix – zyada safe)
+// ============================================================
+const getHeaders = () => ({
+  'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Accept-Encoding': 'gzip, deflate, br',
+  'Connection': 'keep-alive',
+  'Cookie': COOKIE_STRING,
+  'X-Requested-With': 'XMLHttpRequest',
+  'X-IG-App-ID': '936619743392459',  // common Instagram app ID
+  'Referer': 'https://www.instagram.com/',
+  'Origin': 'https://www.instagram.com',
+  'Sec-Fetch-Dest': 'empty',
+  'Sec-Fetch-Mode': 'cors',
+  'Sec-Fetch-Site': 'same-origin'
+});
+
+// ============================================================
+// 🚀 ROUTE – with retry
 // ============================================================
 app.get('/', async (req, res) => {
-  try {
-    const response = await axios.get(
-      `https://www.instagram.com/api/v1/users/web_profile_info/?username=${USERNAME}`,
-      {
-        headers: {
-          'User-Agent': USER_AGENT,
-          'Cookie': COOKIE_STRING,
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': 'https://www.instagram.com/',
-          // Optional but helps:
-          'x-ig-app-id': '936619743392459' // common IG app ID
+  let attempts = 0;
+  const maxAttempts = 3;
+
+  while (attempts < maxAttempts) {
+    attempts++;
+    try {
+      // Thoda delay (1 sec) taaki rate limit na lage
+      if (attempts > 1) await new Promise(r => setTimeout(r, 2000));
+
+      const response = await axios.get(
+        `https://www.instagram.com/api/v1/users/web_profile_info/?username=${USERNAME}`,
+        { headers: getHeaders() }
+      );
+
+      const user = response.data.data.user;
+      if (!user) throw new Error('User not found');
+
+      return res.json({
+        status: 'success',
+        data: {
+          username: user.username,
+          followers: user.edge_followed_by.count,
+          following: user.edge_follow.count,
+          full_name: user.full_name,
+          id: user.id
         }
-      }
-    );
-
-    const user = response.data.data.user;
-    if (!user) {
-      throw new Error('User not found or blocked');
-    }
-
-    res.json({
-      status: 'success',
-      data: {
-        username: user.username,
-        followers: user.edge_followed_by.count,
-        following: user.edge_follow.count,
-        full_name: user.full_name,
-        id: user.id
-      }
-    });
-
-  } catch (error) {
-    console.error('[ERROR] ❌:', error.message);
-
-    // Agar response 401/403 aaya toh checkpoint
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      return res.status(401).json({
-        status: 'checkpoint_required',
-        message: 'Cookies expired ya IP mismatch. Naya sessionid nikaal aur hardcode kar.'
       });
-    }
 
-    res.status(500).json({
-      status: 'failed',
-      error: error.message
-    });
+    } catch (error) {
+      if (error.response && error.response.status === 429) {
+        console.log(`[WARN] 429 – Attempt ${attempts}/${maxAttempts}`);
+        continue; // retry
+      }
+      // Other errors
+      console.error('[ERROR]', error.message);
+      return res.status(500).json({ status: 'failed', error: error.message });
+    }
   }
+
+  // Agar 3 attempts fail ho gaye
+  res.status(429).json({
+    status: 'rate_limited',
+    message: 'Instagram ne rate limit laga di. Thoda der baad try karo, ya proxy use karo.'
+  });
 });
 
 // ============================================================
@@ -80,5 +93,5 @@ app.get('/', async (req, res) => {
 // ============================================================
 app.listen(port, () => {
   console.log(`🚀 Server port ${port} par start ho gaya hai`);
-  console.log('🔥 Axios + hardcoded cookies – chal raha hai!');
+  console.log('🔥 Hardcoded cookies + retry logic – chal raha hai!');
 });
